@@ -19,6 +19,9 @@ public:
     auto enqueue(F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
 
+   void pushThreadId(std::thread::id tid);
+   bool containId(std::thread::id tid);
+
     static std::string&& getThreadNameOfCaller();
 private:    
     static int setThreadNameOfCaller(const std::string& threadName);
@@ -30,17 +33,31 @@ private:
     std::mutex queue_mutex;
     std::condition_variable condition;
     bool stop;
+    //
+    std::set<std::thread::id> threadIdSet;
 };
 
+void MThreads::pushThreadId(std::thread::id tid)
+{
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    threadIdSet.insert(tid);
+}
 
-inline MThreads::MThreads(std::string name, size_t  size= 1)
+bool containId(std::thread::id tid)
+{
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    return  threadIdSet.find(tid) != threadIdSet.end();
+}
+
+inline MThreads::MThreads(const std::string& name, size_t  size= 1)
     : stop(false)
 {
     for(size_t i = 0;i<size;++i)
         workers.emplace_back(
-            [name,this]
+            [name,this, ]
             {
                 setThreadNameOfCaller(name);
+                this->pushThreadId(std::this_thread::get_id());
                 for(;;)
                 {
                     std::function<void()> task;

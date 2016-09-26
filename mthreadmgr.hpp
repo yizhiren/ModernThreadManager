@@ -16,17 +16,15 @@ public:
 
 public:
 	
-	void joinAllMThreads();
+	void joinAndStopAll();
 
-	bool isCurrentThread(const std::string& threadName);
+	void joinAndStopMThread(const std::string& threadName);
+
+	bool isCurrentInMThread(const std::string& threadName);
 
 private:
 
-	void registerThread(const std::string& threadName, const MThreads* mthreads);
-
-	void unregisterThread(const std::string& threadName);
-
-	map<std::string, MThreads*> mthreadMap;
+	map<std::string, MThreads*> threadNameMap;
 
 	std::mutex map_mutex;
 };
