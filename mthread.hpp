@@ -54,7 +54,7 @@ inline MThreads::MThreads(const std::string& name, size_t  size= 1)
 {
     for(size_t i = 0;i<size;++i)
         workers.emplace_back(
-            [name,this, ]
+            [name,this ]
             {
                 setThreadNameOfCaller(name);
                 this->pushThreadId(std::this_thread::get_id());
