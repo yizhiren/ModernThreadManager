@@ -11,18 +11,19 @@
 #include <functional>
 #include <stdexcept>
 
-class ThreadPool {
+class MThreads {
+    friend class MThreadManager;
 public:
-    ThreadPool(const std::string& name, size_t  size= 1);
+    MThreads(const std::string& name, size_t  size= 1);
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
-    ~ThreadPool();
 
-    static std::string getThreadNameOfCaller();
+    static std::string&& getThreadNameOfCaller();
 private:    
     static int setThreadNameOfCaller(const std::string& threadName);
-
+    
+    ~MThreads();
     std::vector< std::thread > workers;
     std::queue< std::function<void()> > tasks;
     
@@ -31,15 +32,15 @@ private:
     bool stop;
 };
 
-// the constructor just launches some amount of workers
-inline ThreadPool::ThreadPool(std::string name, size_t  size= 1)
+
+inline MThreads::MThreads(std::string name, size_t  size= 1)
     : stop(false)
 {
     for(size_t i = 0;i<size;++i)
         workers.emplace_back(
-            [this]
+            [name,this]
             {
-                setThreadNameOfCaller(threadName);
+                setThreadNameOfCaller(name);
                 for(;;)
                 {
                     std::function<void()> task;
@@ -60,9 +61,9 @@ inline ThreadPool::ThreadPool(std::string name, size_t  size= 1)
         );
 }
 
-// add new work item to the pool
+
 template<class F, class... Args>
-auto ThreadPool::enqueue(F&& f, Args&&... args) 
+auto MThreads::enqueue(F&& f, Args&&... args) 
     -> std::future<typename std::result_of<F(Args...)>::type>
 {
     using return_type = typename std::result_of<F(Args...)>::type;
@@ -85,8 +86,8 @@ auto ThreadPool::enqueue(F&& f, Args&&... args)
     return res;
 }
 
-// the destructor joins all threads
-inline ThreadPool::~ThreadPool()
+
+inline MThreads::~MThreads()
 {
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
