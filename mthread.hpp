@@ -19,6 +19,16 @@ public:
     auto enqueue(F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
 
+    template<class F, class... Args>
+    auto enqueue_wait(const MTime& mtime，F&& f, Args&&... args) 
+        -> std::future<typename std::result_of<F(Args...)>::type>;
+
+    template<class F, class... Args>
+    auto enqueue_until(const MTime& mtime，F&& f, Args&&... args) 
+        -> std::future<typename std::result_of<F(Args...)>::type>;
+
+        
+
    void pushThreadId(std::thread::id tid);
    bool containId(std::thread::id tid);
 
@@ -43,7 +53,7 @@ void MThreads::pushThreadId(std::thread::id tid)
     threadIdSet.insert(tid);
 }
 
-bool containId(std::thread::id tid)
+bool MThreads::containId(std::thread::id tid)
 {
     std::unique_lock<std::mutex> lock(queue_mutex);
     return  threadIdSet.find(tid) != threadIdSet.end();
@@ -78,9 +88,17 @@ inline MThreads::MThreads(const std::string& name, size_t  size= 1)
         );
 }
 
+template<class F, class... Args>
+auto MThreads::enqueue_wait(const MTime& mtime, F&& f, Args&&... args) 
+    -> std::future<typename std::result_of<F(Args...)>::type>
+{
+
+    MTime mruntime = mtime + MTime.getTimeOfDay();
+    return enqueue_until(mruntime,std::forward<F>(f), std::forward<Args>(args)...);
+}
 
 template<class F, class... Args>
-auto MThreads::enqueue(F&& f, Args&&... args) 
+auto MThreads::enqueue_until(const MTime& mtime, F&& f, Args&&... args) 
     -> std::future<typename std::result_of<F(Args...)>::type>
 {
     using return_type = typename std::result_of<F(Args...)>::type;
@@ -93,14 +111,25 @@ auto MThreads::enqueue(F&& f, Args&&... args)
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
 
-        // don't allow enqueueing after stopping the pool
-        //if(stop)
-            //throw std::runtime_error("enqueue on stopped ThreadPool");
-
-        tasks.emplace([task](){ (*task)(); });
+        tasks.emplace([task,mtime](){
+            Mtime now = MTime.getTimeOfDay();
+            if(mtime > now){
+                long waittime = (mtime-now).getTotalInMsec();
+                std::this_thread::sleep_for(std::chrono::milliseconds(waittime)); 
+            }
+            (*task)(); 
+        });
     }
     condition.notify_one();
     return res;
+}
+
+
+template<class F, class... Args>
+auto MThreads::enqueue(F&& f, Args&&... args) 
+    -> std::future<typename std::result_of<F(Args...)>::type>
+{
+    return enqueue_wait(Mtime::mtZero, std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 

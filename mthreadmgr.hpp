@@ -13,14 +13,15 @@ public:
 
 	MThreads* createMThreads(const std::string& threadName, size_t  size= 1);
 
+	MThreads* getCurrentMThreads();
 
 public:
 	
-	void joinAndStopAll();
+	void joinAndReleaseAll();
 
-	void joinAndStopMThread(const std::string& threadName);
+	void joinAndReleaseMThreads(const std::string& threadName);
 
-	bool isCurrentInMThread(const std::string& threadName);
+	bool isCurrentInMThreads(const std::string& threadName);
 
 private:
 

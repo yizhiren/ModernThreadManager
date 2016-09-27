@@ -15,7 +15,7 @@ MThreads* MThreadManager::getMThreads(const std::string& threadName)
 	map<std::string, MThreads*>::const_iterator iter =
 		mthreadMap.find(threadName);
 
-	return (mthreadMap.end() == iter) ? NULL : iter -> second;
+	return (mthreadMap.end() != iter) ? iter -> second : NULL;
 }
 
 MThreads* MThreadManager::createMThreads(const std::string& threadName, size_t  size)
@@ -35,7 +35,20 @@ MThreads* MThreadManager::createMThreads(const std::string& threadName, size_t  
 	
 }
 
-void MThreadManager::joinAndStopMThread(const std::string& threadName)
+MThreads* MThreadManager::getCurrentMThreads()
+{
+	std::string threadName = MThreads::getThreadNameOfCaller();
+	std::lock_guard locker(map_mutex);
+
+	map<std::string, MThreads*>::iterator iter =
+		mthreadMap.find(threadName);
+	return ( mthreadMap.end() != iter 
+		&& iter ->second -> containId(std::this_thread::get_id()) )
+		？ iter->second
+		: NULL;
+}
+
+void MThreadManager::joinAndReleaseMThreads(const std::string& threadName)
 {
 	std::lock_guard locker(map_mutex);
 
@@ -49,7 +62,7 @@ void MThreadManager::joinAndStopMThread(const std::string& threadName)
 	}
 }
 
-void MThreadManager::joinAndStopAll()
+void MThreadManager::joinAndReleaseAll()
 {
 	std::lock_guard locker(map_mutex);
 	map<std::string, MThreads*>::iterator iter =
@@ -64,7 +77,7 @@ void MThreadManager::joinAndStopAll()
 }
 
 
-bool MThreadManager::isCurrentInMThread(const std::string& threadName)
+bool MThreadManager::isCurrentInMThreads(const std::string& threadName)
 {
 	std::lock_guard locker(map_mutex);
 	map<std::string, MThreads*>::iterator iter =
