@@ -8,43 +8,40 @@ MThreadManager& MThreadManager::instance()
 }
 
 
-MThreads* MThreadManager::getMThreads(const std::string& threadName)
+auto MThreadManager::getMThreads(const std::string& threadName)
 {
 	std::lock_guard locker(map_mutex);
 
-	map<std::string, MThreads*>::const_iterator iter =
-		mthreadMap.find(threadName);
+	auto iter = mthreadMap.find(threadName);
 
 	return (mthreadMap.end() != iter) ? iter -> second : NULL;
 }
 
-MThreads* MThreadManager::createMThreads(const std::string& threadName, size_t  size)
+auto MThreadManager::createMThreads(const std::string& threadName, size_t  size)
 {
 	std::lock_guard locker(map_mutex);
 
-	map<std::string, MThreads*>::iterator iter =
-		mthreadMap.find(threadName);
+	auto iter = mthreadMap.find(threadName);
 
 	if(mthreadMap.end() != iter){
 		return NULL;
 	}
 
-	MThreads* mthreads = new MThreads(threadName, size);
+	auto mthreads = make_shared<MThreads>(threadName, size);
 	threadNameMap[threadName]= mthreads;
 	return mthreads;
 	
 }
 
-MThreads* MThreadManager::getCurrentMThreads()
+auto MThreadManager::getCurrentMThreads()
 {
 	std::string threadName = MThreads::getThreadNameOfCaller();
 	std::lock_guard locker(map_mutex);
 
-	map<std::string, MThreads*>::iterator iter =
-		mthreadMap.find(threadName);
+	auto iter = mthreadMap.find(threadName);
 	return ( mthreadMap.end() != iter 
 		&& iter ->second -> containId(std::this_thread::get_id()) )
-		？ iter->second
+		? iter->second
 		: NULL;
 }
 
@@ -52,12 +49,10 @@ void MThreadManager::joinAndReleaseMThreads(const std::string& threadName)
 {
 	std::lock_guard locker(map_mutex);
 
-	map<std::string, MThreads*>::iterator iter =
-		mthreadMap.find(threadName);
+	auto iter = mthreadMap.find(threadName);
 
 	if(mthreadMap.end() != iter)
 	{
-		delete iter->second;
 		mthreadMap.erase(iter);
 	}
 }
@@ -65,13 +60,10 @@ void MThreadManager::joinAndReleaseMThreads(const std::string& threadName)
 void MThreadManager::joinAndReleaseAll()
 {
 	std::lock_guard locker(map_mutex);
-	map<std::string, MThreads*>::iterator iter =
-		mthreadMap.begin();
+	auto iter = mthreadMap.begin();
 
 	while(iter != mthreadMap.end()){
-		map<std::string, MThreads*>::iterator todel = iter++;
-
-		delete todel->second;	
+		auto todel = iter++;
 		mthreadMap.erase(todel);
 	}
 }
@@ -80,8 +72,7 @@ void MThreadManager::joinAndReleaseAll()
 bool MThreadManager::isCurrentInMThreads(const std::string& threadName)
 {
 	std::lock_guard locker(map_mutex);
-	map<std::string, MThreads*>::iterator iter =
-		mthreadMap.find(threadName);
+	auto iter = mthreadMap.find(threadName);
 
 	return (mthreadMap.end() != iter 
 		&& iter ->second -> containId(std::this_thread::get_id()) )

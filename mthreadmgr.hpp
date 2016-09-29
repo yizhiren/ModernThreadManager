@@ -9,11 +9,11 @@ public:
 
 	static CCmThreadManager* instance();
 
-	MThreads* getMThreads(const std::string& threadName);
+	auto getMThreads(const std::string& threadName);
 
-	MThreads* createMThreads(const std::string& threadName, size_t  size= 1);
+	auto createMThreads(const std::string& threadName, size_t  size= 1);
 
-	MThreads* getCurrentMThreads();
+	auto getCurrentMThreads();
 
 public:
 	
@@ -25,7 +25,7 @@ public:
 
 private:
 
-	map<std::string, MThreads*> threadNameMap;
+	map<std::string, shared_ptr<MThreads> > threadNameMap;
 
 	std::mutex map_mutex;
 };
