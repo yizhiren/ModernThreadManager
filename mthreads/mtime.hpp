@@ -1,6 +1,7 @@
 #ifndef _M_TIME_H_
 #define _M_TIME_H_
 
+#include <sys/time.h>
 
 #define ONE_SECOND_IN_USECS (1000 * 1000)
 
@@ -121,7 +122,7 @@ inline long MTime::getTotalInMsec() const
 inline MTime MTime::getTimeOfDay()
 {
 	timeval tvCur;
-	::getTimeOfDay(&tvCur, NULL);
+	::gettimeofday(&tvCur, NULL);
 	return MTime(tvCur);
 }
 

@@ -2,21 +2,23 @@
 #define _M_THREAD_MGR_H_
 
 #include "mthread.hpp"
+#include <memory>
+#include <map>
 
 class  MThreadManager  
 {
 public:
 
-	static CCmThreadManager* instance();
+	static MThreadManager& instance();
 
 	auto getMThreads(const std::string& threadName)
-		-> shared_ptr<MThreads>;
+		-> std::shared_ptr<MThreads>;
 
 	auto createMThreads(const std::string& threadName, size_t  size= 1)
-		-> shared_ptr<MThreads>;
+		-> std::shared_ptr<MThreads>;
 
 	auto getCurrentMThreads()
-		-> shared_ptr<MThreads>;
+		-> std::shared_ptr<MThreads>;
 
 public:
 	
@@ -28,7 +30,7 @@ public:
 
 private:
 
-	map<std::string, shared_ptr<MThreads> > threadNameMap;
+	std::map<std::string, std::shared_ptr<MThreads> > threadNameMap;
 
 	std::mutex map_mutex;
 };

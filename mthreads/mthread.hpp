@@ -1,6 +1,7 @@
 #ifndef _M_THREAD_H_
 #define _M_THREAD_H_
 
+#include <set>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -10,6 +11,8 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
+#include "mtime.hpp"
+#include <sys/prctl.h>
 
 class MThreads {
     friend class MThreadManager;
@@ -20,23 +23,23 @@ public:
         -> std::future<typename std::result_of<F(Args...)>::type>;
 
     template<class F, class... Args>
-    auto enqueue_wait(const MTime& mtime，F&& f, Args&&... args) 
+    auto enqueue_wait(const MTime& mtime,F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
 
     template<class F, class... Args>
-    auto enqueue_until(const MTime& mtime，F&& f, Args&&... args) 
+    auto enqueue_until(const MTime& mtime,F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
 
         
 
-   void pushThreadId(std::thread::id tid);
-   bool containId(std::thread::id tid);
+    void pushThreadId(std::thread::id tid);
+    bool containId(std::thread::id tid);
+    ~MThreads();
 
     static std::string&& getThreadNameOfCaller();
 private:    
     static int setThreadNameOfCaller(const std::string& threadName);
     
-    ~MThreads();
     std::vector< std::thread > workers;
     std::queue< std::function<void()> > tasks;
     
@@ -46,6 +49,20 @@ private:
     //
     std::set<std::thread::id> threadIdSet;
 };
+
+std::string&& MThreads::getThreadNameOfCaller()
+{
+    const int MAX_THREAD_NAME_LENGTH = 16;
+    const int MAX_THREAD_NAME_LENGTH_ENSURE_ENOUGH_FOR_FUTURE = MAX_THREAD_NAME_LENGTH * 2;
+    char threadName[MAX_THREAD_NAME_LENGTH_ENSURE_ENOUGH_FOR_FUTURE] = {0};
+    prctl(PR_GET_NAME, (unsigned long)threadName, 0, 0, 0);
+    return std::move<std::string>(threadName);
+}
+
+int MThreads::setThreadNameOfCaller(const std::string& threadName)
+{
+    return prctl(PR_SET_NAME, (unsigned long)threadName.c_str(), 0, 0, 0);
+}
 
 void MThreads::pushThreadId(std::thread::id tid)
 {
@@ -59,7 +76,7 @@ bool MThreads::containId(std::thread::id tid)
     return  threadIdSet.find(tid) != threadIdSet.end();
 }
 
-inline MThreads::MThreads(const std::string& name, size_t  size= 1)
+inline MThreads::MThreads(const std::string& name, size_t size)
     : stop(false)
 {
     for(size_t i = 0;i<size;++i)
@@ -93,7 +110,7 @@ auto MThreads::enqueue_wait(const MTime& mtime, F&& f, Args&&... args)
     -> std::future<typename std::result_of<F(Args...)>::type>
 {
 
-    MTime mruntime = mtime + MTime.getTimeOfDay();
+    MTime mruntime = mtime + MTime::getTimeOfDay();
     return enqueue_until(mruntime,std::forward<F>(f), std::forward<Args>(args)...);
 }
 
@@ -112,7 +129,7 @@ auto MThreads::enqueue_until(const MTime& mtime, F&& f, Args&&... args)
         std::unique_lock<std::mutex> lock(queue_mutex);
 
         tasks.emplace([task,mtime](){
-            Mtime now = MTime.getTimeOfDay();
+            MTime now = MTime::getTimeOfDay();
             if(mtime > now){
                 long waittime = (mtime-now).getTotalInMsec();
                 std::this_thread::sleep_for(std::chrono::milliseconds(waittime)); 
@@ -129,7 +146,7 @@ template<class F, class... Args>
 auto MThreads::enqueue(F&& f, Args&&... args) 
     -> std::future<typename std::result_of<F(Args...)>::type>
 {
-    return enqueue_wait(Mtime::mtZero, std::forward<F>(f), std::forward<Args>(args)...);
+    return enqueue_wait(MTime::mtZero, std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 
