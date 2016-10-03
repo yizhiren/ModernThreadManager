@@ -22,9 +22,9 @@ public:
 
 public:
 	
-	void joinAndReleaseAll();
+	void asyncReleaseAllMThreads();
 
-	void joinAndReleaseMThreads(const std::string& threadName);
+	void asyncReleaseMThreads(const std::string& threadName);
 
 	bool isCurrentInMThreads(const std::string& threadName);
 

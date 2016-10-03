@@ -48,7 +48,7 @@ auto MThreadManager::getCurrentMThreads()
 		: NULL;
 }
 
-void MThreadManager::joinAndReleaseMThreads(const std::string& threadName)
+void MThreadManager::asyncReleaseMThreads(const std::string& threadName)
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
 
@@ -60,7 +60,7 @@ void MThreadManager::joinAndReleaseMThreads(const std::string& threadName)
 	}
 }
 
-void MThreadManager::joinAndReleaseAll()
+void MThreadManager::asyncReleaseAllMThreads()
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
 	auto iter = threadNameMap.begin();
