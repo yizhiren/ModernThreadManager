@@ -1,0 +1,8 @@
+sudo: false
+language: cpp
+compiler:
+    - clang
+    - gcc
+before_script: cd demo
+script: make && ./demo
+
