@@ -1,14 +1,14 @@
-#include "mthreadmgr.hpp"
+#include "mthreadsmgr.hpp"
 
 
-MThreadManager& MThreadManager::instance()
+MThreadsMgr& MThreadsMgr::instance()
 {
-	static MThreadManager mthreadManager;
+	static MThreadsMgr mthreadManager;
 	return mthreadManager;
 }
 
 
-auto MThreadManager::getMThreads(const std::string& threadName)
+auto MThreadsMgr::getMThreads(const std::string& threadName)
 	-> std::shared_ptr<MThreads>
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
@@ -18,7 +18,7 @@ auto MThreadManager::getMThreads(const std::string& threadName)
 	return (threadNameMap.end() != iter) ? iter -> second : NULL;
 }
 
-auto MThreadManager::createMThreads(const std::string& threadName, size_t  size)
+auto MThreadsMgr::createMThreads(const std::string& threadName, size_t  size)
 		-> std::shared_ptr<MThreads>
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
@@ -35,7 +35,7 @@ auto MThreadManager::createMThreads(const std::string& threadName, size_t  size)
 	
 }
 
-auto MThreadManager::getCurrentMThreads()
+auto MThreadsMgr::getCurrentMThreads()
 		-> std::shared_ptr<MThreads>
 {
 	std::string threadName = MThreads::getThreadNameOfCaller();
@@ -48,7 +48,7 @@ auto MThreadManager::getCurrentMThreads()
 		: NULL;
 }
 
-void MThreadManager::asyncReleaseMThreads(const std::string& threadName)
+void MThreadsMgr::asyncReleaseMThreads(const std::string& threadName)
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
 
@@ -60,7 +60,7 @@ void MThreadManager::asyncReleaseMThreads(const std::string& threadName)
 	}
 }
 
-void MThreadManager::asyncReleaseAllMThreads()
+void MThreadsMgr::asyncReleaseAllMThreads()
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
 	auto iter = threadNameMap.begin();
@@ -72,7 +72,7 @@ void MThreadManager::asyncReleaseAllMThreads()
 }
 
 
-bool MThreadManager::isCurrentInMThreads(const std::string& threadName)
+bool MThreadsMgr::isCurrentInMThreads(const std::string& threadName)
 {
 	std::lock_guard<std::mutex> locker(map_mutex);
 	auto iter = threadNameMap.find(threadName);

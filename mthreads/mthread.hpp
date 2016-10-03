@@ -50,7 +50,7 @@ private:
     std::set<std::thread::id> threadIdSet;
 };
 
-std::string&& MThreads::getThreadNameOfCaller()
+inline std::string&& MThreads::getThreadNameOfCaller()
 {
     const int MAX_THREAD_NAME_LENGTH = 16;
     const int MAX_THREAD_NAME_LENGTH_ENSURE_ENOUGH_FOR_FUTURE = MAX_THREAD_NAME_LENGTH * 2;
@@ -59,18 +59,18 @@ std::string&& MThreads::getThreadNameOfCaller()
     return std::move<std::string>(threadName);
 }
 
-int MThreads::setThreadNameOfCaller(const std::string& threadName)
+inline int MThreads::setThreadNameOfCaller(const std::string& threadName)
 {
     return prctl(PR_SET_NAME, (unsigned long)threadName.c_str(), 0, 0, 0);
 }
 
-void MThreads::pushThreadId(std::thread::id tid)
+inline void MThreads::pushThreadId(std::thread::id tid)
 {
     std::unique_lock<std::mutex> lock(queue_mutex);
     threadIdSet.insert(tid);
 }
 
-bool MThreads::containId(std::thread::id tid)
+inline bool MThreads::containId(std::thread::id tid)
 {
     std::unique_lock<std::mutex> lock(queue_mutex);
     return  threadIdSet.find(tid) != threadIdSet.end();

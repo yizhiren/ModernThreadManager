@@ -5,11 +5,11 @@
 #include <memory>
 #include <map>
 
-class  MThreadManager  
+class  MThreadsMgr  
 {
 public:
 
-	static MThreadManager& instance();
+	static MThreadsMgr& instance();
 
 	auto getMThreads(const std::string& threadName)
 		-> std::shared_ptr<MThreads>;
