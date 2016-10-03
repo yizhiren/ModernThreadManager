@@ -1,6 +1,6 @@
 #include "mtime.hpp"
 
-const MTime mtZero;
+const MTime MTime::mtZero;
 
 void MTime::normalize()
 {
