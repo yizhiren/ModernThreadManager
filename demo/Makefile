@@ -1,4 +1,4 @@
-CPP = g++
+CXX ?= g++
 
 USER_SRCS = $(wildcard ../*/*.cpp )
 
@@ -14,10 +14,10 @@ all: $(USER_BIN)
 
 
 $(USER_BIN): $(USER_OBJS)
-	$(CPP) -o $@ $(LINK_FLAG) $(USER_OBJS)
+	$(CXX) -o $@ $(LINK_FLAG) $(USER_OBJS)
 
 %.o: %.cpp
-	$(CPP) -c $^ $(COMPILE_FLAG) -o $@
+	$(CXX) -c $^ $(COMPILE_FLAG) -o $@
 
 clean:
 	rm -rf $(USER_BIN)
