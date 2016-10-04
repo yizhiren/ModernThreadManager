@@ -6,7 +6,7 @@ USER_OBJS = $(patsubst %.cpp,%.o,$(USER_SRCS))
 
 USER_BIN = demo
 
-COMPILE_FLAG = -std=c++11
+COMPILE_FLAG = -std=c++11 -lpthread
 
 LINK_FLAG = -lpthread
 
