@@ -14,7 +14,7 @@ all: $(USER_BIN)
 
 
 $(USER_BIN): $(USER_OBJS)
-	$(CXX) -o $@ $(LINK_FLAG) $(USER_OBJS)
+	$(CXX) -o $@ $(USER_OBJS) $(LINK_FLAG)
 
 %.o: %.cpp
 	$(CXX) -c $^ $(COMPILE_FLAG) -o $@
