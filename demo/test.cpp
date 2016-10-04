@@ -67,9 +67,21 @@ int example2(){
 	return 0;
 }
 
+int fn_base(){
+       MThreadsMgr& mthreadsmgr = MThreadsMgr::instance();
+        auto mthreads = mthreadsmgr.createMThreads("simpleusage",10);
+        auto mfuture = mthreads->enqueue([]{
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                return 1;
+        });
+        return  mfuture.get();
 
+}
 
 int main(){
+	std::cout<<"[  0 ]test mthreads with basic using." << std::endl;
+		assert(1==fn_base());
+	std::cout<<"[ OK ]"<<std::endl;
 	std::cout<<"[  1 ]test mthreads with one thread." << std::endl;
 		example1();
 	std::cout<<"[ OK ]"<<std::endl;
